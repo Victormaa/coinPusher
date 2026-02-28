@@ -26,6 +26,7 @@ public class GlobalInputCounter : MonoBehaviour
             if (isPressed && !keyStates[i])
             {
                 counter++;
+                CoinPool.Instance.DropCoin(); // 扔币
 
                 // 同步更新到单例中
                 if (DebugManager.Instance != null)

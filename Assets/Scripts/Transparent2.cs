@@ -1,33 +1,39 @@
 using System;
 using System.Runtime.InteropServices;
+using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems; // 引用这个以支持UI检测
+using UnityEngine.EventSystems;
+using UnityEngine.UI; // 引用这个以支持UI检测
 
 public class Transparent2 : MonoBehaviour
 {
    // --- Windows API 定义 ---
     [DllImport("user32.dll")]
-    private static extern IntPtr GetActiveWindow();
+    private static extern IntPtr GetActiveWindow(); // 获取当前活动窗口句柄
 
     [DllImport("user32.dll")]
-    private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+    private static extern int GetWindowLong(IntPtr hWnd, int nIndex); // 获取窗口样式
 
     [DllImport("user32.dll")]
-    private static extern int SetWindowLong(IntPtr hWnd, int nIndex, uint dwNewLong);
+    private static extern int SetWindowLong(IntPtr hWnd, int nIndex, uint dwNewLong); // 设置窗口样式
 
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags); // 设置窗口位置
 
     [DllImport("Dwmapi.dll")]
-    private static extern uint DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS margins);
+    private static extern uint DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS margins); // 扩展窗口边框权限以实现透明效果
 
-    private struct MARGINS { public int cxLeftWidth; public int cxRightWidth; public int cyTopHeight; public int cyBottomHeight; }
+    private struct MARGINS { public int cxLeftWidth; public int cxRightWidth; public int cyTopHeight; public int cyBottomHeight; } // 定义一个结构体用于 DwmExtendFrameIntoClientArea 函数
 
     // --- 常量定义 ---
-    const int GWL_EXSTYLE = -20;
-    const uint WS_EX_LAYERED = 0x00080000;
-    const uint WS_EX_TRANSPARENT = 0x00000020; // 鼠标穿透属性
-    static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+    const int GWL_EXSTYLE = -20;                            // 窗口扩展样式的索引
+    const uint WS_EX_LAYERED = 0x00080000;                  // 窗口分层属性 ↓ transparent的前提
+    const uint WS_EX_TRANSPARENT = 0x00000020;              // 鼠标穿透属性
+    const uint SWP_NOMOVE = 0x0002;                         // 窗口位置不变
+    const uint SWP_NOSIZE = 0x0001;                         // 窗口大小不变
+    static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);   // 窗口置顶
+    static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2); // 取消窗口置顶
+
 
     // --- 变量 ---
     private IntPtr hWnd;
@@ -36,22 +42,23 @@ public class Transparent2 : MonoBehaviour
 
     // 可选：指定哪些层是可以点击的
     public LayerMask clickableLayers; 
+    public TextMeshProUGUI isHoveringText; // 用于调试显示鼠标悬停状态
 
     void Start()
     {
         mainCamera = Camera.main;
 
 #if !UNITY_EDITOR
-        hWnd = GetActiveWindow();
+        hWnd = GetActiveWindow(); // 获取当前窗口句柄
 
         // 1. 开启 Alpha 通道透明 (视觉)
-        MARGINS margins = new MARGINS { cxLeftWidth = -1 };
+        MARGINS margins = new MARGINS { cxLeftWidth = -1 }; // 将窗口边框权限拓展覆盖整个窗口，使整个窗口都适用alpha通道透明
         DwmExtendFrameIntoClientArea(hWnd, ref margins);
 
         // 2. 初始化窗口样式
         // 默认先设为 Layered，不加 Transparent，保证一开始能被点到
         SetWindowLong(hWnd, GWL_EXSTYLE, WS_EX_LAYERED);
-        SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, 0);
+        SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, 0); /////////////////////
 #endif
     }
 
@@ -60,6 +67,7 @@ public class Transparent2 : MonoBehaviour
 #if !UNITY_EDITOR
         // 检测鼠标是否悬停在“有意义”的东西上
         bool isHovering = CheckIfHovering();
+        isHoveringText.text = "IsHovering: " + isHovering.ToString(); // 调试显示悬停状态
 
         // 只有当状态发生改变时，才去调用 Windows API (优化性能)
         if (isHovering != isWindowClickable)
@@ -102,6 +110,21 @@ public class Transparent2 : MonoBehaviour
         {
             // 关闭穿透：鼠标可以点击窗口
             SetWindowLong(hWnd, GWL_EXSTYLE, WS_EX_LAYERED);
+        }
+    }
+
+    // 设置是否窗口置顶
+    public void SetOnTop(bool onTop)
+    {
+        if (onTop)
+        {
+            // 开启置顶：窗口总在最前面
+            SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        }
+        else
+        {
+            // 取消置顶：窗口恢复正常排序
+            SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
         }
     }
 }
