@@ -21,8 +21,18 @@ public class DebugManager : MonoBehaviour
     }
     [Header("全局按键/鼠标点击次数")]
     public int counter = 0;
-
     public TMP_Text inputCounter;
+
+    [Header("当前场景内的硬币数")]
+    public int coinsInScene = 0;
+    public TMP_Text coinsInSceneCounter;
+
+    [Header("鼠标是否覆盖在可交互对象上")]
+    public bool isHovering = false;
+    public TMP_Text isHoveringText;
+
+
+
     private void Awake()
     {
         if (instance == null)
@@ -39,6 +49,8 @@ public class DebugManager : MonoBehaviour
 
     void Update()
     {
-        inputCounter.text = "InputCounter: " + counter;
+        inputCounter.text = "Input Counter: " + counter;
+        coinsInSceneCounter.text = "Coins in Scene: " + coinsInScene;
+        isHoveringText.text = "is Hovering: " + isHovering.ToString();
     }
 }

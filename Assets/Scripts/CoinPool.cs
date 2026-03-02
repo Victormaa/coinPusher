@@ -106,12 +106,12 @@ public class CoinPool : MonoBehaviour
         pusherMat.bounciness = pusherBounciness;
     }
 
-/*
+
     // Debug
     void Update()
     {
-        Debug.Log($"当前对象池中可用的硬币数量: {pool.Count}");
+        DebugManager.Instance.coinsInScene = poolSize - pool.Count;
     }
     
-*/
+
 }
