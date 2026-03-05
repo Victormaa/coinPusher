@@ -9,14 +9,15 @@ using UnityEngine;
 public class CoinPusherController : MonoBehaviour
 {
     [Header("基础属性（可在 Inspector 调整）")]
+    public bool adjustParaAtRunTime = false;
     [Tooltip("侧板的基础倾角（正数向内倾斜，负数向外）。单位：度")]
-    [Range(-30f, 30f)] public float baseSideTiltAngle = 0f;
+    [Range(-15f, 10f)] public float baseSideTiltAngle = 0f;
 
     [Tooltip("推币台面的基础往复移动速度。")]
     [Range(0.1f, 5f)] public float basePusherSpeed = 1f;
 
     [Tooltip("落币台面的基础倾角（正数抬高前端，负数降低前端）。单位：度")]
-    [Range(-20f, 20f)] public float baseDropTiltAngle = 0f;
+    [Range(5f, 22f)] public float baseDropTiltAngle = 0f;
 
     [Header("场景引用")]
     [Tooltip("左侧侧板 Transform")]
@@ -66,6 +67,11 @@ public class CoinPusherController : MonoBehaviour
         ApplySettings();
     }
 
+    private void Update()
+    {
+        if(adjustParaAtRunTime)
+            ApplySettings();
+    }
 #if UNITY_EDITOR
     // 在编辑器里调 Inspector 数值时就立即更新效果，方便调试“手感”。
     private void OnValidate()
