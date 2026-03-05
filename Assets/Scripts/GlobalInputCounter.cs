@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 public class GlobalInputCounter : MonoBehaviour
@@ -14,12 +14,22 @@ public class GlobalInputCounter : MonoBehaviour
     // 用来记录上一帧 256 个虚拟按键的状态，用于判断“刚刚按下”的瞬间
     private bool[] keyStates = new bool[256];
 
-/*
-    // buffers
-    [Header("每输入x次, 掉落一个普通/特殊硬币")]
-    public int normalCoinBuffer = 3;
-    public int specialCoinBuffer = 1000;
-*/
+    private const string TOTAL_INPUTS_KEY = "GlobalInput_TotalInputs";
+
+    private void Awake()
+    {
+        // 从本地存档加载总输入次数
+        if (PlayerPrefs.HasKey(TOTAL_INPUTS_KEY))
+        {
+            counter = PlayerPrefs.GetInt(TOTAL_INPUTS_KEY, 0);
+        }
+
+        // 把加载到的数值同步给 Debug 面板
+        if (DebugManager.Instance != null)
+        {
+            DebugManager.Instance.counter = counter;
+        }
+    }
 
 
     void Update()
@@ -34,33 +44,18 @@ public class GlobalInputCounter : MonoBehaviour
             if (isPressed && !keyStates[i])
             {
                 counter ++;
-                WalletController.Instance.points ++;
-/*
-                normalCoinBuffer --;
-                specialCoinBuffer --;
+                PlayerPrefs.SetInt(TOTAL_INPUTS_KEY, counter);
+                PlayerPrefs.Save();
 
-                // 判断是否掉落硬币
-                if (specialCoinBuffer <= 0)
-                {
-                    //CoinPool.Instance.DropSpecialCoin(); // 扔特殊币
-                    specialCoinBuffer = 1000; // 重置缓冲
-                    normalCoinBuffer = 3; // 同时重置普通币缓冲，避免特殊币掉落后紧接着掉落普通币
-                }
-                else if (normalCoinBuffer <= 0)
-                {
-                    CoinPool.Instance.DropCoin(); // 扔币
-                    normalCoinBuffer = 3; // 重置缓冲
-                }
-*/
+                WalletController.Instance.AddPoints(1);
                 // 同步更新到单例中
                 if (DebugManager.Instance != null)
                 {
                     DebugManager.Instance.counter = counter;
-                    DebugManager.Instance.points = WalletController.Instance.points;
 
-                // 注意：虚拟键码 1 是鼠标左键，2 是鼠标右键，4 是鼠标中键
-                // 字母和数字键与 ASCII 码对应
-                Debug.Log($"检测到后台全局输入！键码: {i}, 当前 counter 的值为: {counter}");
+                    // 注意：虚拟键码 1 是鼠标左键，2 是鼠标右键，4 是鼠标中键
+                    // 字母和数字键与 ASCII 码对应
+                    Debug.Log($"检测到后台全局输入！键码: {i}, 当前 counter 的值为: {counter}");
                 }
             }
             

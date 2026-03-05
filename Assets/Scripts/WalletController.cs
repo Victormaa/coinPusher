@@ -10,10 +10,49 @@ public class WalletController : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+
+        // 从本地存档加载初始数据
+        LoadFromPrefs();
+
+        // 把加载到的数值同步给 Debug 面板
+        if (DebugManager.Instance != null)
+        {
+            DebugManager.Instance.points = points;
+            DebugManager.Instance.tokens = tokens;
+        }
     }
 
     public int points = 0; 
     public int tokens = 0;
+
+    // --- PlayerPrefs 键名 ---
+    private const string POINTS_KEY = "Wallet_Points";
+    private const string TOKENS_KEY = "Wallet_Tokens";
+
+    private void LoadFromPrefs()
+    {
+        if (PlayerPrefs.HasKey(POINTS_KEY))
+        {
+            points = PlayerPrefs.GetInt(POINTS_KEY, 0);
+        }
+
+        if (PlayerPrefs.HasKey(TOKENS_KEY))
+        {
+            tokens = PlayerPrefs.GetInt(TOKENS_KEY, 0);
+        }
+    }
+
+    private void SavePoints()
+    {
+        PlayerPrefs.SetInt(POINTS_KEY, points);
+        PlayerPrefs.Save();
+    }
+
+    private void SaveTokens()
+    {
+        PlayerPrefs.SetInt(TOKENS_KEY, tokens);
+        PlayerPrefs.Save();
+    }
 
     /// <summary>
     /// 增加一定数量的 token，并同步更新 DebugManager 的显示。
@@ -30,6 +69,8 @@ public class WalletController : MonoBehaviour
         {
             DebugManager.Instance.tokens = tokens;
         }
+
+        SaveTokens();
     }
 
     /// <summary>
@@ -47,7 +88,44 @@ public class WalletController : MonoBehaviour
         {
             DebugManager.Instance.tokens = tokens;
         }
+
+        SaveTokens();
     }
 
-    // 后续如果有 points 的加减，也可以用类似的封装来统一更新 Debug UI。
+    /// <summary>
+    /// 增加一定数量的 points，并同步更新 DebugManager + 本地存档。
+    /// </summary>
+    public void AddPoints(int amount)
+    {
+        if (amount == 0) return;
+
+        points += amount;
+        if (points < 0) points = 0;
+
+        if (DebugManager.Instance != null)
+        {
+            DebugManager.Instance.points = points;
+        }
+
+        SavePoints();
+    }
+
+    /// <summary>
+    /// 扣除一定数量的 points，并同步更新 DebugManager + 本地存档。
+    /// </summary>
+    public void SubPoints(int amount)
+    {
+        if (amount <= 0) return;
+
+        points -= amount;
+        if (points < 0) points = 0;
+
+        if (DebugManager.Instance != null)
+        {
+            DebugManager.Instance.points = points;
+        }
+
+        SavePoints();
+    }
+
 }
