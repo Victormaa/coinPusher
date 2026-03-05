@@ -66,7 +66,7 @@ public class Transparent2 : MonoBehaviour
 #if !UNITY_EDITOR
         // 检测鼠标是否悬停在“有意义”的东西上
         bool isHovering = CheckIfHovering();
-        debugManager.Instance.isHovering = isHovering; // 同步状态到 DebugManager
+        DebugManager.Instance.isHovering = isHovering; // 同步状态到 DebugManager
 
         // 只有当状态发生改变时，才去调用 Windows API (优化性能)
         if (isHovering != isWindowClickable)
