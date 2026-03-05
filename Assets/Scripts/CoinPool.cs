@@ -16,8 +16,6 @@ public class CoinPool : MonoBehaviour
     public int poolSize = 100;                                // 初始数量
     private Queue<GameObject> pool = new Queue<GameObject>(); // 对象池, FIFO
 
-    [Header("投币设置")]                                         
-    //private float xMin, xMax, y, z;                        // 投币边界
     [Tooltip("发射力度")]    
     public float launchForce = 5f;                           // 投掷硬币的初始力
     private Vector3 spawnPos; 
@@ -34,15 +32,6 @@ public class CoinPool : MonoBehaviour
         }
         // 获取其它变量
         spawnPos = DaoGuiController.Instance.spawnPoint.position;
-
-        /*
-        // 获取投币范围
-        Collider col = sprawnRange.GetComponent<BoxCollider>();
-        xMin = col.bounds.min.x;
-        xMax = col.bounds.max.x;
-        y = col.bounds.center.y;
-        z = col.bounds.center.z;
-        */
     }
 
     // 投硬币
