@@ -45,13 +45,11 @@ public class WalletController : MonoBehaviour
     private void SavePoints()
     {
         PlayerPrefs.SetInt(POINTS_KEY, points);
-        PlayerPrefs.Save();
     }
 
     private void SaveTokens()
     {
         PlayerPrefs.SetInt(TOKENS_KEY, tokens);
-        PlayerPrefs.Save();
     }
 
     /// <summary>
@@ -69,8 +67,6 @@ public class WalletController : MonoBehaviour
         {
             DebugManager.Instance.tokens = tokens;
         }
-
-        SaveTokens();
     }
 
     /// <summary>
@@ -88,8 +84,6 @@ public class WalletController : MonoBehaviour
         {
             DebugManager.Instance.tokens = tokens;
         }
-
-        SaveTokens();
     }
 
     /// <summary>
@@ -106,8 +100,6 @@ public class WalletController : MonoBehaviour
         {
             DebugManager.Instance.points = points;
         }
-
-        SavePoints();
     }
 
     /// <summary>
@@ -124,8 +116,13 @@ public class WalletController : MonoBehaviour
         {
             DebugManager.Instance.points = points;
         }
-
-        SavePoints();
     }
 
+    private void OnApplicationQuit()
+    {
+        // 退出游戏时统一保存一次所有钱包相关的数据
+        SavePoints();
+        SaveTokens();
+        PlayerPrefs.Save();
+    }
 }

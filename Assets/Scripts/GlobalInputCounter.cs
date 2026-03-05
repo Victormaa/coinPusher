@@ -45,7 +45,6 @@ public class GlobalInputCounter : MonoBehaviour
             {
                 counter ++;
                 PlayerPrefs.SetInt(TOTAL_INPUTS_KEY, counter);
-                PlayerPrefs.Save();
 
                 WalletController.Instance.AddPoints(1);
                 // 同步更新到单例中
