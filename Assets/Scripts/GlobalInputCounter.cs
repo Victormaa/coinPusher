@@ -14,10 +14,12 @@ public class GlobalInputCounter : MonoBehaviour
     // 用来记录上一帧 256 个虚拟按键的状态，用于判断“刚刚按下”的瞬间
     private bool[] keyStates = new bool[256];
 
+/*
     // buffers
     [Header("每输入x次, 掉落一个普通/特殊硬币")]
     public int normalCoinBuffer = 3;
     public int specialCoinBuffer = 1000;
+*/
 
 
     void Update()
@@ -31,7 +33,9 @@ public class GlobalInputCounter : MonoBehaviour
             // 如果当前是按下状态，且上一帧是抬起状态，说明这是一次“新的有效敲击”
             if (isPressed && !keyStates[i])
             {
-                counter++;
+                counter ++;
+                WalletController.Instance.points ++;
+/*
                 normalCoinBuffer --;
                 specialCoinBuffer --;
 
@@ -47,20 +51,24 @@ public class GlobalInputCounter : MonoBehaviour
                     CoinPool.Instance.DropCoin(); // 扔币
                     normalCoinBuffer = 3; // 重置缓冲
                 }
-
+*/
                 // 同步更新到单例中
                 if (DebugManager.Instance != null)
                 {
                     DebugManager.Instance.counter = counter;
-                }
+                    DebugManager.Instance.points = WalletController.Instance.points;
 
                 // 注意：虚拟键码 1 是鼠标左键，2 是鼠标右键，4 是鼠标中键
                 // 字母和数字键与 ASCII 码对应
                 Debug.Log($"检测到后台全局输入！键码: {i}, 当前 counter 的值为: {counter}");
+                }
             }
-
+            
             // 更新按键状态供下一帧对比
             keyStates[i] = isPressed;
         }
     }
+
+
+
 }

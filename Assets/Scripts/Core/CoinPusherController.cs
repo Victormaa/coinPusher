@@ -10,6 +10,7 @@ public class CoinPusherController : MonoBehaviour
 {
     [Header("基础属性（可在 Inspector 调整）")]
     public bool adjustParaAtRunTime = false;
+
     [Tooltip("侧板的基础倾角（正数向内倾斜，负数向外）。单位：度")]
     [Range(-15f, 10f)] public float baseSideTiltAngle = 0f;
 
@@ -32,9 +33,37 @@ public class CoinPusherController : MonoBehaviour
     [Tooltip("负责实际往复移动的推板脚本")]
     public PushBoard pushBoard;
 
+    [Tooltip("负责导轨的脚本")]
+    public DaoGuiController daoGuiController;
+
+    [Header("导轨属性")]
+    [Range(0f, 2f)] 
+    public float rotationSpeed = 1f;
+    [Range(0f, 90f)] 
+    public float maxRotationAngle = 60f;
+
     [Header("配件插槽（最多三个）")]
     [Tooltip("三个插槽，每个插槽上的配件可以对推币机属性做加成/修正。")]
     public SlotModifier[] slots = new SlotModifier[3];
+
+
+    
+    [Header("硬币手感调整")]
+    public GameObject coinPrefab;
+    [Range(1f, 10f)] public float coinMass = 1f;                             // 硬币质量
+    [Range(0f, 5f)] public float coinDrag = 0.1f;                             // 硬币阻力
+    [Range(0f, 5f)] public float coinAngularDrag = 0.05f;                     // 硬币角阻力
+    [Range(0f, 5f)] public float coinDynamicFriction = 0.4f;                  // 硬币动摩擦力
+    [Range(0f, 5f)] public float coinStaticFriction = 0.6f;                   // 硬币静摩擦力
+    [Range(0f, 0.5f)] public float coinBounciness = 0.5f;                       // 硬币弹性  
+    
+    [Header("推币机手感调整")]
+    [Range(0f, 5)] public float pusherDynamicFriction = 0.2f;                // 推板动摩擦力
+    [Range(0f, 5f)] public float pusherStaticFriction = 0.2f;                 // 推板静摩擦力
+    [Range(0f, 0.5f)] public float pusherBounciness = 0.5f;                     // 推板弹性 
+    private Rigidbody coinRb;
+    private PhysicMaterial coinMat;
+    private PhysicMaterial pusherMat;
 
     /// <summary>
     /// 单个插槽的修正数据，可以理解为“配件”的效果。
@@ -60,6 +89,7 @@ public class CoinPusherController : MonoBehaviour
         [Header("对落币台面倾角的修正")]
         [Tooltip("在基础落币台倾角的基础上增加或减少的角度（度）。")]
         [Range(-10f, 10f)] public float dropTiltOffset = 0f;
+
     }
 
     private void Start()
@@ -111,6 +141,8 @@ public class CoinPusherController : MonoBehaviour
         ApplySideTilt(finalSideTilt);
         ApplyDropTilt(finalDropTilt);
         ApplyPusherSpeed(finalPusherSpeed);
+        ApplyHandfeelSettings();
+        ApplyDaoGuiSettings();
     }
 
     /// <summary>
@@ -159,4 +191,42 @@ public class CoinPusherController : MonoBehaviour
 
         pushBoard.speed = Mathf.Max(0f, speed);
     }
+
+    // 手感调整
+    private void ApplyHandfeelSettings()
+    {
+        if (coinRb == null || coinMat == null || pusherMat == null)
+        {
+            coinRb = coinPrefab.GetComponent<Rigidbody>();
+            coinMat = coinPrefab.GetComponent<BoxCollider>().sharedMaterial;
+            pusherMat = pushBoard.GetComponent<BoxCollider>().sharedMaterial;
+        }
+        coinRb.mass = coinMass;
+        coinRb.drag = coinDrag;
+        coinRb.angularDrag = coinAngularDrag;
+        coinMat.bounciness = coinBounciness;
+        coinMat.dynamicFriction = coinDynamicFriction;
+        coinMat.staticFriction = coinStaticFriction;
+        pusherMat.dynamicFriction = pusherDynamicFriction;
+        pusherMat.staticFriction = pusherStaticFriction;
+        pusherMat.bounciness = pusherBounciness;
+    }
+
+    // 导轨调整
+    private void ApplyDaoGuiSettings()
+    {
+        if (daoGuiController == null) return;
+        daoGuiController.rotationSpeed = rotationSpeed;
+        daoGuiController.maxRotationAngle = maxRotationAngle;
+    }
+
+
+
+
+
+
+
+
+
+
 }

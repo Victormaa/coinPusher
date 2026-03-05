@@ -23,6 +23,14 @@ public class DebugManager : MonoBehaviour
     public int counter = 0;
     public TMP_Text inputCounter;
 
+    [Header("当前场景内的玩家分数")]
+    public int points = 0;
+    public TMP_Text pointsCounter;
+
+    [Header("当前场景内的玩家代币数")]
+    public int tokens = 0;
+    public TMP_Text tokensCounter;
+
     [Header("当前场景内的硬币数")]
     public int coinsInScene = 0;
     public TMP_Text coinsInSceneCounter;
@@ -49,8 +57,10 @@ public class DebugManager : MonoBehaviour
 
     void Update()
     {
-        inputCounter.text = "Input Counter: " + counter;
+        inputCounter.text = "Total Inputs: " + counter;
         coinsInSceneCounter.text = "Coins in Scene: " + coinsInScene;
         isHoveringText.text = "is Hovering: " + isHovering.ToString();
+        pointsCounter.text = "Points: " + points;
+        tokensCounter.text = "Tokens: " + tokens;
     }
 }
