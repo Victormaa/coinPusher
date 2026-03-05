@@ -79,8 +79,7 @@ public class CoinPool : MonoBehaviour
         coin.transform.position = spawnPos;                       // 设置位置
         coin.transform.rotation = Quaternion.Euler(-90f, 0f, 0f); // 设置旋转
 
-        WalletController.Instance.tokens--;                      // 扣除一个token
-        DebugManager.Instance.tokens = WalletController.Instance.tokens; // 同步更新到Debug面板
+        WalletController.Instance.SubTokens(1);                   // 扣除一个token（内部已同步更新到Debug面板）
 
         coin.SetActive(true);
 
@@ -101,6 +100,7 @@ public class CoinPool : MonoBehaviour
     {
         coin.SetActive(false); // 隐藏硬币
         pool.Enqueue(coin);    // 放回池子
+        WalletController.Instance.AddTokens(1);
     }
     
 

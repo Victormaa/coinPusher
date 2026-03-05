@@ -9,9 +9,8 @@ public class BuyTokens : MonoBehaviour
         if (WalletController.Instance.points >= pointsUsed)
         {
             WalletController.Instance.points -= pointsUsed;
-            WalletController.Instance.tokens += tokensToBuy; 
+            WalletController.Instance.AddTokens(tokensToBuy);
             DebugManager.Instance.points = WalletController.Instance.points; 
-            DebugManager.Instance.tokens = WalletController.Instance.tokens; 
         }
         else
         {

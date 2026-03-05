@@ -14,8 +14,7 @@ public class DeadZone : MonoBehaviour
             CoinPool.Instance.RecycleCoin(other.gameObject);
             if (isRewardZone)
             {
-                WalletController.Instance.tokens ++; // 进入奖励区，获得tokens
-                DebugManager.Instance.tokens = WalletController.Instance.tokens; // 同步更新到Debug面板
+                WalletController.Instance.AddTokens(1); // 进入奖励区，获得tokens（内部已同步更新到Debug面板）
             }
         }
 
