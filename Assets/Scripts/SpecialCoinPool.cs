@@ -6,9 +6,20 @@ using UnityEngine;
 public class SpecialCoinPool : MonoBehaviour
 {
     public static SpecialCoinPool Instance { get; private set; }
+    // --- PlayerPrefs 键名 ---
+    private const string SPECIAL_COIN_TIMER_KEY = "SpecialCoinTimer";
+    private bool specialCoinReady;
+    public float currentTimer;
+    
     private void Awake()
     {
         Instance = this;
+        
+        if (PlayerPrefs.HasKey(SPECIAL_COIN_TIMER_KEY))
+        {
+            currentTimer = PlayerPrefs.GetFloat(SPECIAL_COIN_TIMER_KEY, timeInterval * 60f);
+            specialCoinReady = currentTimer <= 0;
+        }
     }
 
     [Header("特殊硬币对象池")]
@@ -21,17 +32,18 @@ public class SpecialCoinPool : MonoBehaviour
     public float timeInterval = 30f;
     [Tooltip("投入特殊币所需要的积分")]
     public int pointsCost = 50;
-    private bool specialCoinReady = false;
-    private float currentTimer;
+
     
     [Header("投币设置")]
     [Tooltip("发射力度")]                                             
     public float launchForce = 7f;                           // 投掷硬币的初始力
     private Vector3 spawnPos;  
 
-    [Header("倒计时")]  
-    public TextMeshProUGUI timerText;
-    
+   // [Header("倒计时")]  
+    //public TextMeshProUGUI timerText;
+
+
+
     void Start()
     {
         // 初始化对象池
@@ -44,7 +56,6 @@ public class SpecialCoinPool : MonoBehaviour
         }
         
         // 获取其它变量
-        currentTimer = timeInterval*60f;       // 转换为秒
         spawnPos = DaoGuiController.Instance.spawnPoint.position;
 
     }
@@ -55,9 +66,8 @@ public class SpecialCoinPool : MonoBehaviour
         if (pool.Count > 0 && specialCoinReady && WalletController.Instance.points >= pointsCost)
         {
             specialCoinReady = false;
-            currentTimer = timeInterval*60f;                       // 重置计时器
-            WalletController.Instance.points -= pointsCost;           // 扣除积分
-            DebugManager.Instance.points = WalletController.Instance.points; // 同步更新到Debug面板
+            currentTimer = timeInterval*60f;                          // 重置计时器
+            WalletController.Instance.SubTokens(pointsCost);          // 扣除积分
             GameObject coin = pool.Dequeue();                         // 从池子里取出一个coin       
             coin.transform.position = spawnPos;                       // 设置位置
             coin.transform.rotation = Quaternion.Euler(-90f, 0f, 0f); // 设置旋转
@@ -69,6 +79,7 @@ public class SpecialCoinPool : MonoBehaviour
             {
                 rb.velocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
+                rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ; // 只允许绕Y轴旋转
                 Vector3 launchDirection = -DaoGuiController.Instance.transform.up; 
                 rb.AddForce(launchDirection * launchForce, ForceMode.Impulse);
             }   
@@ -84,7 +95,7 @@ public class SpecialCoinPool : MonoBehaviour
     // 计时器
     void Update()
     {
-        // 如果特殊币已经准备好，就直接reuturn
+        // 如果特殊币已经准备好，就直接return
         if (specialCoinReady)
         {
             return;
@@ -99,6 +110,14 @@ public class SpecialCoinPool : MonoBehaviour
         {
             specialCoinReady = true;
         }
-        timerText.text = currentTimer > 0 ? $"Special Coin Timer: {Mathf.FloorToInt(currentTimer / 60):00}:{Mathf.FloorToInt(currentTimer % 60):00}": "Special Coin Ready, 50 points per drop";
+        //timerText.text = currentTimer > 0 ? $"Special Coin Timer: {Mathf.FloorToInt(currentTimer / 60):00}:{Mathf.FloorToInt(currentTimer % 60):00}": "Special Coin Ready, 50 points per drop";
+        
+        // Debug
+        DebugManager.Instance.specialCoinsInScene = poolSize - pool.Count;
+    }
+
+    private void OnApplicationQuit()
+    {
+        PlayerPrefs.SetFloat(SPECIAL_COIN_TIMER_KEY, currentTimer);
     }
 }

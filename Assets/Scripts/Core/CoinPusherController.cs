@@ -58,8 +58,8 @@ public class CoinPusherController : MonoBehaviour
     [Range(0f, 0.5f)] public float coinBounciness = 0.5f;                       // 硬币弹性  
     
     [Header("推币机手感调整")]
-    [Range(0f, 5)] public float pusherDynamicFriction = 0.2f;                // 推板动摩擦力
-    [Range(0f, 5f)] public float pusherStaticFriction = 0.2f;                 // 推板静摩擦力
+    [Range(0f, 10f)] public float pusherDynamicFriction = 0.2f;                // 推板动摩擦力
+    [Range(0f, 10f)] public float pusherStaticFriction = 0.2f;                 // 推板静摩擦力
     [Range(0f, 0.5f)] public float pusherBounciness = 0.5f;                     // 推板弹性 
     private Rigidbody coinRb;
     private PhysicMaterial coinMat;

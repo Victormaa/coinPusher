@@ -45,7 +45,6 @@ public class GlobalInputCounter : MonoBehaviour
             {
                 counter ++;
                 PlayerPrefs.SetInt(TOTAL_INPUTS_KEY, counter);
-
                 WalletController.Instance.AddPoints(1);
                 // 同步更新到单例中
                 if (DebugManager.Instance != null)
@@ -62,7 +61,4 @@ public class GlobalInputCounter : MonoBehaviour
             keyStates[i] = isPressed;
         }
     }
-
-
-
 }

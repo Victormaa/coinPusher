@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 3546413492621257862}
   m_Layer: 0
   m_Name: Special Coin
-  m_TagString: Coin
+  m_TagString: Special Coin
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

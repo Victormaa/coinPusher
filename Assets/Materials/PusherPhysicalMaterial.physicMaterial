@@ -7,8 +7,8 @@ PhysicMaterial:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: PusherPhysicalMaterial
-  dynamicFriction: 0.2
-  staticFriction: 0.2
-  bounciness: 0.5
+  dynamicFriction: 5
+  staticFriction: 5
+  bounciness: 0.218
   frictionCombine: 0
   bounceCombine: 0

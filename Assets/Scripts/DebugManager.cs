@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using System.Collections.Generic;
 using TMPro;
+using UnityEngine;
+
 public class DebugManager : MonoBehaviour
 {
     private static DebugManager instance;
@@ -35,9 +34,17 @@ public class DebugManager : MonoBehaviour
     public int coinsInScene = 0;
     public TMP_Text coinsInSceneCounter;
 
+    [Header("当前场景内的特殊硬币数")]
+    public int specialCoinsInScene = 0;
+    public TMP_Text specialCoinsCounter;
+
     [Header("鼠标是否覆盖在可交互对象上")]
     public bool isHovering = false;
     public TMP_Text isHoveringText;
+
+    [Header("特殊硬币倒计时")]
+    public TextMeshProUGUI SpecialCoinTimerText;
+    private float currentTimer;
 
 
 
@@ -58,9 +65,13 @@ public class DebugManager : MonoBehaviour
     void Update()
     {
         inputCounter.text = "Total Inputs: " + counter;
-        coinsInSceneCounter.text = "Coins in Scene: " + coinsInScene;
+
         isHoveringText.text = "is Hovering: " + isHovering.ToString();
         pointsCounter.text = "Points: " + points;
         tokensCounter.text = "Tokens: " + tokens;
+        coinsInSceneCounter.text = "Coins in Scene: " + coinsInScene;
+        specialCoinsCounter.text = "Special Coins in Scene: " + specialCoinsInScene;
+        currentTimer = SpecialCoinPool.Instance .currentTimer;
+        SpecialCoinTimerText.text = currentTimer > 0 ? $"Special Coin Timer: {Mathf.FloorToInt(currentTimer / 60):00}:{Mathf.FloorToInt(currentTimer % 60):00}" : "Special Coin Ready, 50 points per drop";
     }
 }

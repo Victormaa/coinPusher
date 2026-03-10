@@ -89,9 +89,10 @@ public class CoinPool : MonoBehaviour
         {
             rb.velocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
-
+            rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ; // 只允许绕Y轴旋转
             Vector3 launchDirection = -DaoGuiController.Instance.transform.up;
             rb.AddForce(launchDirection * launchForce, ForceMode.Impulse);
+
         }
     }
 
@@ -100,7 +101,6 @@ public class CoinPool : MonoBehaviour
     {
         coin.SetActive(false); // 隐藏硬币
         pool.Enqueue(coin);    // 放回池子
-        WalletController.Instance.AddTokens(1);
     }
     
 
