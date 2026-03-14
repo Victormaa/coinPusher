@@ -5,7 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - Coin
-  - Special Coin
+  - SpecialCoin
   layers:
   - Default
   - TransparentFX

@@ -17,13 +17,16 @@ public class DeadZone : MonoBehaviour
                 WalletController.Instance.AddTokens(1); // 进入奖励区，获得tokens（内部已同步更新到Debug面板）
             }
         }
-
         else if (other.CompareTag("SpecialCoin"))
         {
             SpecialCoinPool.Instance.RecycleSpecialCoin(other.gameObject);
             if (isRewardZone)
             {
-                /////////// 特殊币奖励 ////////////////////
+                // 触发一次盲盒抽取
+                if (BlindBoxManager.Instance != null)
+                {
+                    BlindBoxManager.Instance.OpenOnce();
+                }
             }
         }
     }

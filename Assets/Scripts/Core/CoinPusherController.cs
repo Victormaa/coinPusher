@@ -94,6 +94,8 @@ public class CoinPusherController : MonoBehaviour
 
     private void Start()
     {
+        // 启动时先从背包恢复已装备的配件，再应用整体设置
+        ApplyEquippedModifiersFromInventory();
         ApplySettings();
     }
 
@@ -198,7 +200,7 @@ public class CoinPusherController : MonoBehaviour
         if (coinRb == null || coinMat == null || pusherMat == null)
         {
             coinRb = coinPrefab.GetComponent<Rigidbody>();
-            coinMat = coinPrefab.GetComponent<BoxCollider>().sharedMaterial;
+            coinMat = coinPrefab.GetComponent<MeshCollider>().sharedMaterial;
             pusherMat = pushBoard.GetComponent<BoxCollider>().sharedMaterial;
         }
         coinRb.mass = coinMass;
@@ -218,6 +220,55 @@ public class CoinPusherController : MonoBehaviour
         if (daoGuiController == null) return;
         daoGuiController.rotationSpeed = rotationSpeed;
         daoGuiController.maxRotationAngle = maxRotationAngle;
+    }
+
+    /// <summary>
+    /// 供外部（例如 UI 或 InventoryManager）调用，把一件装备数据应用到指定槽位。
+    /// </summary>
+    public void EquipModifier(int slotIndex, SlotModifierData data)
+    {
+        if (slots == null || slotIndex < 0 || slotIndex >= slots.Length)
+            return;
+
+        if (data == null)
+        {
+            slots[slotIndex] = null;
+            return;
+        }
+
+        if (slots[slotIndex] == null)
+        {
+            slots[slotIndex] = new SlotModifier();
+        }
+
+        slots[slotIndex].slotName = data.id;
+        slots[slotIndex].enabled = true;
+        slots[slotIndex].sideTiltOffset = data.sideTiltOffset;
+        slots[slotIndex].pusherSpeedMultiplier = data.pusherSpeedMultiplier;
+        slots[slotIndex].dropTiltOffset = data.dropTiltOffset;
+    }
+
+    /// <summary>
+    /// 从 InventoryManager 中读取当前已装备的 3 个配件，并应用到 slots。
+    /// </summary>
+    public void ApplyEquippedModifiersFromInventory()
+    {
+        if (InventoryManager.Instance == null)
+            return;
+
+        var equipped = InventoryManager.Instance.GetEquippedModifiers();
+        if (equipped == null) return;
+
+        // 确保 slots 长度为 3
+        if (slots == null || slots.Length != 3)
+        {
+            slots = new SlotModifier[3];
+        }
+
+        for (int i = 0; i < slots.Length && i < equipped.Length; i++)
+        {
+            EquipModifier(i, equipped[i]);
+        }
     }
 
 

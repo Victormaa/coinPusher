@@ -12,11 +12,10 @@ GameObject:
   - component: {fileID: 4976815336576971791}
   - component: {fileID: 2285542138444389486}
   - component: {fileID: 9038391466599284744}
-  - component: {fileID: 7171547365091761447}
   - component: {fileID: 3546413492621257862}
   m_Layer: 0
   m_Name: Special Coin
-  m_TagString: Special Coin
+  m_TagString: SpecialCoin
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -113,27 +112,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &7171547365091761447
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 417571037897377875}
-  m_Material: {fileID: 13400000, guid: b221fe02e0619f74e84f248035f6f20f, type: 2}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 0
-  serializedVersion: 3
-  m_Size: {x: 0.7, y: 2, z: 0.7}
-  m_Center: {x: 0.00000005960464, y: 0, z: -0.00000008940696}
 --- !u!64 &3546413492621257862
 MeshCollider:
   m_ObjectHideFlags: 0

@@ -8,7 +8,7 @@ public class UnlockZone : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         Debug.Log("333");
-        if (other.CompareTag("Coin") || other.CompareTag("Special Coin"))
+        if (other.CompareTag("Coin") || other.CompareTag("SpecialCoin"))
         {
             Debug.Log("222");
             Rigidbody rb = other.GetComponent<Rigidbody>();

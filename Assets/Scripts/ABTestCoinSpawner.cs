@@ -19,19 +19,19 @@ public class ABTestCoinSpawner : MonoBehaviour
     public float heightOffset = 0.02f;
 
     [Tooltip("仅在指定场景名时执行（为空则所有场景都执行）")]
-    public string runOnlyInScene = "ABTest";
+    //public string runOnlyInScene = "ABTest";
 
     private void Start()
     {
         // 如果设置了场景名，只在对应场景中执行
-        if (!string.IsNullOrEmpty(runOnlyInScene))
-        {
-            var scene = SceneManager.GetActiveScene();
-            if (!scene.name.Equals(runOnlyInScene))
-            {
-                return;
-            }
-        }
+        //if (!string.IsNullOrEmpty(runOnlyInScene))
+        //{
+        //    var scene = SceneManager.GetActiveScene();
+        //    if (!scene.name.Equals(runOnlyInScene))
+        //    {
+        //        return;
+        //    }
+        //}
 
         if (tableSurface == null)
         {
