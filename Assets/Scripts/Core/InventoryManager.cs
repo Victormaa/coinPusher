@@ -9,8 +9,6 @@ public class InventoryManager : MonoBehaviour
 {
     public static InventoryManager Instance { get; private set; }
 
-    private const string INVENTORY_KEY = "Inventory_Data";
-
     [Header("配置数据库引用")]
     public ModifierConfigDatabase modifierDatabase;
     public SkinConfigDatabase skinDatabase;
@@ -22,21 +20,6 @@ public class InventoryManager : MonoBehaviour
     [Header("当前已装备到推币机的装备 ID（3 个槽位）")]
     public string[] equippedModifierIds = new string[3];
 
-    [Serializable]
-    private class InventoryModifierSaveData
-    {
-        public string id;
-        public int level;
-    }
-
-    [Serializable]
-    private class InventorySaveData
-    {
-        public List<InventoryModifierSaveData> modifiers = new List<InventoryModifierSaveData>();
-        public List<string> skins = new List<string>();
-        public string[] equippedModifierIds = new string[3];
-    }
-
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -46,7 +29,7 @@ public class InventoryManager : MonoBehaviour
         }
 
         Instance = this;
-        LoadFromPrefs();
+        LoadFromSave();
     }
 
     /// <summary>
@@ -78,7 +61,7 @@ public class InventoryManager : MonoBehaviour
         };
 
         ownedModifiers.Add(copy);
-        SaveToPrefs();
+        SaveToSave();
         return copy;
     }
 
@@ -107,7 +90,7 @@ public class InventoryManager : MonoBehaviour
         };
 
         ownedSkins.Add(copy);
-        SaveToPrefs();
+        SaveToSave();
         return copy;
     }
 
@@ -120,7 +103,7 @@ public class InventoryManager : MonoBehaviour
             return;
 
         equippedModifierIds[slotIndex] = modifierId;
-        SaveToPrefs();
+        SaveToSave();
     }
 
     /// <summary>
@@ -153,94 +136,75 @@ public class InventoryManager : MonoBehaviour
         return result;
     }
 
-    private void LoadFromPrefs()
+    private void LoadFromSave()
     {
-        if (!PlayerPrefs.HasKey(INVENTORY_KEY))
-            return;
+        if (SaveManager.Instance == null) return;
 
-        string json = PlayerPrefs.GetString(INVENTORY_KEY, string.Empty);
-        if (string.IsNullOrEmpty(json))
-            return;
+        var data = SaveManager.Instance.Data;
+        ownedModifiers.Clear();
+        ownedSkins.Clear();
 
-        try
+        if (data.modifiers != null)
         {
-            var data = JsonUtility.FromJson<InventorySaveData>(json);
-            if (data == null) return;
-
-            ownedModifiers.Clear();
-            ownedSkins.Clear();
-
-            // 还原装备
-            if (data.modifiers != null)
+            foreach (var m in data.modifiers)
             {
-                foreach (var m in data.modifiers)
+                if (m == null || string.IsNullOrEmpty(m.id)) continue;
+                var config = modifierDatabase != null ? modifierDatabase.GetById(m.id, m.level) : null;
+                if (config == null) continue;
+
+                ownedModifiers.Add(new SlotModifierData
                 {
-                    if (m == null || string.IsNullOrEmpty(m.id)) continue;
-                    var config = modifierDatabase != null ? modifierDatabase.GetById(m.id, m.level) : null;
-                    if (config == null) continue;
-
-                    ownedModifiers.Add(new SlotModifierData
-                    {
-                        id = config.id,
-                        level = config.level,
-                        sideTiltOffset = config.sideTiltOffset,
-                        pusherSpeedMultiplier = config.pusherSpeedMultiplier,
-                        dropTiltOffset = config.dropTiltOffset
-                    });
-                }
-            }
-
-            // 还原皮肤
-            if (data.skins != null)
-            {
-                foreach (var id in data.skins)
-                {
-                    if (string.IsNullOrEmpty(id)) continue;
-                    var config = skinDatabase != null ? skinDatabase.GetById(id) : null;
-                    if (config == null) continue;
-
-                    ownedSkins.Add(new SkinData
-                    {
-                        id = config.id,
-                        displayName = config.displayName
-                    });
-                }
-            }
-
-            // 还原已装备 ID
-            if (data.equippedModifierIds != null && data.equippedModifierIds.Length == equippedModifierIds.Length)
-            {
-                for (int i = 0; i < equippedModifierIds.Length; i++)
-                {
-                    equippedModifierIds[i] = data.equippedModifierIds[i];
-                }
+                    id = config.id,
+                    level = config.level,
+                    sideTiltOffset = config.sideTiltOffset,
+                    pusherSpeedMultiplier = config.pusherSpeedMultiplier,
+                    dropTiltOffset = config.dropTiltOffset
+                });
             }
         }
-        catch (Exception e)
+
+        if (data.skins != null)
         {
-            Debug.LogWarning($"[InventoryManager] Failed to load inventory from prefs: {e.Message}");
+            foreach (var id in data.skins)
+            {
+                if (string.IsNullOrEmpty(id)) continue;
+                var config = skinDatabase != null ? skinDatabase.GetById(id) : null;
+                if (config == null) continue;
+
+                ownedSkins.Add(new SkinData
+                {
+                    id = config.id,
+                    displayName = config.displayName
+                });
+            }
+        }
+
+        if (data.equippedModifierIds != null && data.equippedModifierIds.Length == equippedModifierIds.Length)
+        {
+            for (int i = 0; i < equippedModifierIds.Length; i++)
+            {
+                equippedModifierIds[i] = data.equippedModifierIds[i];
+            }
         }
     }
 
-    private void SaveToPrefs()
+    private void SaveToSave()
     {
-        var data = new InventorySaveData();
+        if (SaveManager.Instance == null) return;
 
-        // 存储装备：只存 id + level
+        var data = SaveManager.Instance.Data;
+        data.modifiers.Clear();
+        data.skins.Clear();
+
         if (ownedModifiers != null)
         {
             foreach (var m in ownedModifiers)
             {
                 if (m == null || string.IsNullOrEmpty(m.id)) continue;
-                data.modifiers.Add(new InventoryModifierSaveData
-                {
-                    id = m.id,
-                    level = m.level
-                });
+                data.modifiers.Add(new InventoryModifierSaveData { id = m.id, level = m.level });
             }
         }
 
-        // 存储皮肤：只存 id
         if (ownedSkins != null)
         {
             foreach (var s in ownedSkins)
@@ -250,19 +214,14 @@ public class InventoryManager : MonoBehaviour
             }
         }
 
-        // 存储已装备 ID
         if (equippedModifierIds != null && equippedModifierIds.Length == 3)
         {
             data.equippedModifierIds = new string[3];
             for (int i = 0; i < 3; i++)
-            {
                 data.equippedModifierIds[i] = equippedModifierIds[i];
-            }
         }
 
-        string json = JsonUtility.ToJson(data);
-        PlayerPrefs.SetString(INVENTORY_KEY, json);
-        PlayerPrefs.Save();
+        SaveManager.Instance.RequestSave();
     }
 }
 

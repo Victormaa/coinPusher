@@ -6,18 +6,16 @@ using UnityEngine;
 public class SpecialCoinPool : MonoBehaviour
 {
     public static SpecialCoinPool Instance { get; private set; }
-    // --- PlayerPrefs 键名 ---
-    private const string SPECIAL_COIN_TIMER_KEY = "SpecialCoinTimer";
     private bool specialCoinReady;
     public float currentTimer;
-    
+
     private void Awake()
     {
         Instance = this;
-        
-        if (PlayerPrefs.HasKey(SPECIAL_COIN_TIMER_KEY))
+
+        if (SaveManager.Instance != null)
         {
-            currentTimer = PlayerPrefs.GetFloat(SPECIAL_COIN_TIMER_KEY, timeInterval * 60f);
+            currentTimer = SaveManager.Instance.Data.specialCoinTimer;
             specialCoinReady = currentTimer <= 0;
         }
     }
@@ -114,10 +112,17 @@ public class SpecialCoinPool : MonoBehaviour
         
         // Debug
         DebugManager.Instance.specialCoinsInScene = poolSize - pool.Count;
+
+        if (SaveManager.Instance != null)
+            SaveManager.Instance.Data.specialCoinTimer = currentTimer;
     }
 
     private void OnApplicationQuit()
     {
-        PlayerPrefs.SetFloat(SPECIAL_COIN_TIMER_KEY, currentTimer);
+        if (SaveManager.Instance != null)
+        {
+            SaveManager.Instance.Data.specialCoinTimer = currentTimer;
+            SaveManager.Instance.RequestSave();
+        }
     }
 }

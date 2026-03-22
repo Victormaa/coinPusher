@@ -7,14 +7,17 @@ using UnityEngine.UIElements;
 public class WalletController : MonoBehaviour
 {
     public static WalletController Instance { get; private set; }
+
     private void Awake()
     {
         Instance = this;
 
-        // 从本地存档加载初始数据
-        LoadFromPrefs();
+        if (SaveManager.Instance != null)
+        {
+            points = SaveManager.Instance.Data.points;
+            tokens = SaveManager.Instance.Data.tokens;
+        }
 
-        // 把加载到的数值同步给 Debug 面板
         if (DebugManager.Instance != null)
         {
             DebugManager.Instance.points = points;
@@ -22,34 +25,15 @@ public class WalletController : MonoBehaviour
         }
     }
 
-    public int points = 0; 
+    public int points = 0;
     public int tokens = 0;
 
-    // --- PlayerPrefs 键名 ---
-    private const string POINTS_KEY = "Wallet_Points";
-    private const string TOKENS_KEY = "Wallet_Tokens";
-
-    private void LoadFromPrefs()
+    private void FlushToSave()
     {
-        if (PlayerPrefs.HasKey(POINTS_KEY))
-        {
-            points = PlayerPrefs.GetInt(POINTS_KEY, 0);
-        }
-
-        if (PlayerPrefs.HasKey(TOKENS_KEY))
-        {
-            tokens = PlayerPrefs.GetInt(TOKENS_KEY, 0);
-        }
-    }
-
-    private void SavePoints()
-    {
-        PlayerPrefs.SetInt(POINTS_KEY, points);
-    }
-
-    private void SaveTokens()
-    {
-        PlayerPrefs.SetInt(TOKENS_KEY, tokens);
+        if (SaveManager.Instance == null) return;
+        SaveManager.Instance.Data.points = points;
+        SaveManager.Instance.Data.tokens = tokens;
+        SaveManager.Instance.RequestSave();
     }
 
     /// <summary>
@@ -64,15 +48,14 @@ public class WalletController : MonoBehaviour
         if (tokens < 0) tokens = 0;
 
         if (DebugManager.Instance != null)
-        {
             DebugManager.Instance.tokens = tokens;
-        }
+
+        FlushToSave();
     }
 
     /// <summary>
     /// 扣除一定数量的 token，并同步更新 DebugManager 的显示。
     /// </summary>
-    /// <param name="amount">要扣除的数量，自动夹到 0 不会减成负数。</param>
     public void SubTokens(int amount)
     {
         if (amount <= 0) return;
@@ -81,9 +64,9 @@ public class WalletController : MonoBehaviour
         if (tokens < 0) tokens = 0;
 
         if (DebugManager.Instance != null)
-        {
             DebugManager.Instance.tokens = tokens;
-        }
+
+        FlushToSave();
     }
 
     /// <summary>
@@ -97,9 +80,9 @@ public class WalletController : MonoBehaviour
         if (points < 0) points = 0;
 
         if (DebugManager.Instance != null)
-        {
             DebugManager.Instance.points = points;
-        }
+
+        FlushToSave();
     }
 
     /// <summary>
@@ -113,16 +96,8 @@ public class WalletController : MonoBehaviour
         if (points < 0) points = 0;
 
         if (DebugManager.Instance != null)
-        {
             DebugManager.Instance.points = points;
-        }
-    }
 
-    private void OnApplicationQuit()
-    {
-        // 退出游戏时统一保存一次所有钱包相关的数据
-        SavePoints();
-        SaveTokens();
-        PlayerPrefs.Save();
+        FlushToSave();
     }
 }

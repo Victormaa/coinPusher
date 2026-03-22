@@ -14,21 +14,13 @@ public class GlobalInputCounter : MonoBehaviour
     // 用来记录上一帧 256 个虚拟按键的状态，用于判断“刚刚按下”的瞬间
     private bool[] keyStates = new bool[256];
 
-    private const string TOTAL_INPUTS_KEY = "GlobalInput_TotalInputs";
-
     private void Awake()
     {
-        // 从本地存档加载总输入次数
-        if (PlayerPrefs.HasKey(TOTAL_INPUTS_KEY))
-        {
-            counter = PlayerPrefs.GetInt(TOTAL_INPUTS_KEY, 0);
-        }
+        if (SaveManager.Instance != null)
+            counter = SaveManager.Instance.Data.globalInputCounter;
 
-        // 把加载到的数值同步给 Debug 面板
         if (DebugManager.Instance != null)
-        {
             DebugManager.Instance.counter = counter;
-        }
     }
 
 
@@ -43,8 +35,12 @@ public class GlobalInputCounter : MonoBehaviour
             // 如果当前是按下状态，且上一帧是抬起状态，说明这是一次“新的有效敲击”
             if (isPressed && !keyStates[i])
             {
-                counter ++;
-                PlayerPrefs.SetInt(TOTAL_INPUTS_KEY, counter);
+                counter++;
+                if (SaveManager.Instance != null)
+                {
+                    SaveManager.Instance.Data.globalInputCounter = counter;
+                    SaveManager.Instance.RequestSave();
+                }
                 WalletController.Instance.AddPoints(1);
                 // 同步更新到单例中
                 if (DebugManager.Instance != null)
