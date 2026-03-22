@@ -22,10 +22,9 @@ public class DeadZone : MonoBehaviour
             SpecialCoinPool.Instance.RecycleSpecialCoin(other.gameObject);
             if (isRewardZone)
             {
-                // 触发一次盲盒抽取
                 if (BlindBoxManager.Instance != null)
                 {
-                    BlindBoxManager.Instance.OpenOnce();
+                    BlindBoxManager.Instance.AddPendingBlindBox();
                 }
             }
         }

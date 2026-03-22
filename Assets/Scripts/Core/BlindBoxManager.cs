@@ -13,6 +13,13 @@ public class BlindBoxManager : MonoBehaviour
     [Tooltip("配置盲盒可能产出的所有奖励及其权重。")]
     public List<BlindBoxRewardEntry> rewards = new List<BlindBoxRewardEntry>();
 
+    private int _pendingCount;
+
+    /// <summary>
+    /// 当前可开启的盲盒数量。SpecialCoin 掉入奖励区时 +1，玩家点击打开时 -1 并执行抽奖。
+    /// </summary>
+    public int PendingCount => _pendingCount;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -25,10 +32,23 @@ public class BlindBoxManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 触发一次盲盒抽取，返回本次结果。
+    /// SpecialCoin 掉入奖励区时调用，增加一个可开启的盲盒。
+    /// </summary>
+    public void AddPendingBlindBox()
+    {
+        _pendingCount++;
+    }
+
+    /// <summary>
+    /// 玩家点击「打开」时调用。若存在待开启盲盒则执行抽奖并发放奖励，返回结果；否则返回 null。
     /// </summary>
     public BlindBoxResult OpenOnce()
     {
+        if (_pendingCount <= 0)
+            return null;
+
+        _pendingCount--;
+
         var entry = PickReward();
         if (entry == null)
         {

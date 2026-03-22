@@ -46,8 +46,6 @@ public class DebugManager : MonoBehaviour
     public TextMeshProUGUI SpecialCoinTimerText;
     private float currentTimer;
 
-
-
     private void Awake()
     {
         if (instance == null)
@@ -61,7 +59,6 @@ public class DebugManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
     void Update()
     {
         inputCounter.text = "Total Inputs: " + counter;

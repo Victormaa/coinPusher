@@ -50,10 +50,6 @@ public class GlobalInputCounter : MonoBehaviour
                 if (DebugManager.Instance != null)
                 {
                     DebugManager.Instance.counter = counter;
-
-                    // 注意：虚拟键码 1 是鼠标左键，2 是鼠标右键，4 是鼠标中键
-                    // 字母和数字键与 ASCII 码对应
-                    Debug.Log($"检测到后台全局输入！键码: {i}, 当前 counter 的值为: {counter}");
                 }
             }
             
