@@ -9,10 +9,15 @@ public class BlindBoxManager : MonoBehaviour
 {
     public static BlindBoxManager Instance { get; private set; }
 
-    [Tooltip("CSV 相对 StreamingAssets 的路径")]
+    [Tooltip("CSV 相对 StreamingAssets 的路径，仅决定奖励类型及权重")]
     public string rewardsCsvPath = "Config/BlindBoxRewards.csv";
 
-    private List<BlindBoxRewardEntry> _rewards = new List<BlindBoxRewardEntry>();
+    [Header("配置数据库引用（用于按类型权重抽取具体奖励）")]
+    public ModifierConfigDatabase modifierConfigDatabase;
+    public SkinConfigDatabase skinConfigDatabase;
+    public TokensConfigDatabase tokensConfigDatabase;
+
+    private List<(BlindBoxRewardType type, float weight)> _typeWeights = new List<(BlindBoxRewardType, float)>();
     private int _pendingCount;
 
     /// <summary>
@@ -29,12 +34,15 @@ public class BlindBoxManager : MonoBehaviour
         }
 
         Instance = this;
+        if (modifierConfigDatabase == null) modifierConfigDatabase = FindObjectOfType<ModifierConfigDatabase>();
+        if (skinConfigDatabase == null) skinConfigDatabase = FindObjectOfType<SkinConfigDatabase>();
+        if (tokensConfigDatabase == null) tokensConfigDatabase = FindObjectOfType<TokensConfigDatabase>();
         LoadRewardsFromCsv();
     }
 
     private void LoadRewardsFromCsv()
     {
-        _rewards.Clear();
+        _typeWeights.Clear();
         string raw = CsvLoader.LoadFromStreamingAssets(rewardsCsvPath);
         if (string.IsNullOrEmpty(raw))
             return;
@@ -52,13 +60,9 @@ public class BlindBoxManager : MonoBehaviour
                 continue;
             }
 
-            _rewards.Add(new BlindBoxRewardEntry
-            {
-                type = type,
-                amount = CsvLoader.GetInt(row, "amount", 1),
-                weight = CsvLoader.GetFloat(row, "weight", 1f),
-                payloadId = CsvLoader.GetString(row, "payloadId")
-            });
+            float weight = CsvLoader.GetFloat(row, "weight", 1f);
+            if (weight <= 0f) continue;
+            _typeWeights.Add((type, weight));
         }
     }
 
@@ -71,7 +75,7 @@ public class BlindBoxManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 玩家点击「打开」时调用。若存在待开启盲盒则执行抽奖并发放奖励，返回结果；否则返回 null。
+    /// 玩家点击「打开」时调用。先抽类型，再从对应表按权重抽取具体奖励并发放。
     /// </summary>
     public BlindBoxResult OpenOnce()
     {
@@ -80,109 +84,100 @@ public class BlindBoxManager : MonoBehaviour
 
         _pendingCount--;
 
-        var entry = PickReward();
-        if (entry == null)
-        {
-            Debug.LogWarning("[BlindBoxManager] No reward entry picked. Check rewards configuration.");
-            return null;
-        }
-
-        var result = new BlindBoxResult
-        {
-            type = entry.type,
-            amount = Mathf.Max(1, entry.amount),
-            payloadId = entry.payloadId
-        };
-
-        // 按类型结算
-        switch (entry.type)
-        {
-            case BlindBoxRewardType.Tokens:
-                if (WalletController.Instance != null)
-                {
-                    WalletController.Instance.AddTokens(result.amount);
-                }
-                else
-                {
-                    Debug.LogWarning("[BlindBoxManager] WalletController.Instance is null, cannot grant tokens.");
-                }
-                break;
-
-            case BlindBoxRewardType.Modifier:
-                if (InventoryManager.Instance != null && !string.IsNullOrEmpty(entry.payloadId))
-                {
-                    for (int i = 0; i < result.amount; i++)
-                    {
-                        var modData = InventoryManager.Instance.AddModifierById(entry.payloadId);
-                        result.gainedModifier = modData; // 记录最后一个，用于 UI 展示
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning("[BlindBoxManager] Cannot grant modifier, InventoryManager or payloadId missing.");
-                }
-                break;
-
-            case BlindBoxRewardType.Skin:
-                if (InventoryManager.Instance != null && !string.IsNullOrEmpty(entry.payloadId))
-                {
-                    var skinData = InventoryManager.Instance.AddSkinById(entry.payloadId);
-                    result.gainedSkin = skinData;
-                }
-                else
-                {
-                    Debug.LogWarning("[BlindBoxManager] Cannot grant skin, InventoryManager or payloadId missing.");
-                }
-                break;
-        }
-
+        BlindBoxRewardType pickedType = PickRewardType();
+        var result = BuildAndGrantReward(pickedType);
+        if (result == null)
+            Debug.LogWarning("[BlindBoxManager] No reward granted. Check type tables and config references.");
         return result;
     }
 
     /// <summary>
-    /// 根据权重从奖励表中随机选中一条。
+    /// 第一步：按 BlindBoxRewards 表的权重抽取奖励类型。
     /// </summary>
-    private BlindBoxRewardEntry PickReward()
+    private BlindBoxRewardType PickRewardType()
     {
-        if (_rewards == null || _rewards.Count == 0)
-        {
-            return null;
-        }
+        if (_typeWeights == null || _typeWeights.Count == 0)
+            return BlindBoxRewardType.Tokens;
 
-        float totalWeight = 0f;
-        foreach (var r in _rewards)
-        {
-            if (r == null || r.weight <= 0f) continue;
-            totalWeight += r.weight;
-        }
+        float total = 0f;
+        foreach (var (_, w) in _typeWeights)
+            total += w;
 
-        if (totalWeight <= 0f)
-        {
-            return null;
-        }
+        if (total <= 0f)
+            return _typeWeights[0].type;
 
-        float rand = Random.Range(0f, totalWeight);
+        float rand = Random.Range(0f, total);
         float acc = 0f;
-
-        foreach (var r in _rewards)
+        foreach (var (type, w) in _typeWeights)
         {
-            if (r == null || r.weight <= 0f) continue;
-
-            acc += r.weight;
+            acc += w;
             if (rand <= acc)
-            {
-                return r;
-            }
+                return type;
         }
+        return _typeWeights[_typeWeights.Count - 1].type;
+    }
 
-        // 理论上不会走到这里，保险起见返回最后一个非空条目
-        for (int i = _rewards.Count - 1; i >= 0; i--)
+    /// <summary>
+    /// 第二步：根据类型从对应表按权重抽取，并发放奖励。
+    /// </summary>
+    private BlindBoxResult BuildAndGrantReward(BlindBoxRewardType type)
+    {
+        var result = new BlindBoxResult { type = type };
+
+        switch (type)
         {
-            if (_rewards[i] != null)
-                return _rewards[i];
+            case BlindBoxRewardType.Tokens:
+                int amount = tokensConfigDatabase != null ? tokensConfigDatabase.PickByWeight() : 1;
+                amount = Mathf.Max(1, amount);
+                result.amount = amount;
+                if (WalletController.Instance != null)
+                    WalletController.Instance.AddTokens(amount);
+                else
+                    Debug.LogWarning("[BlindBoxManager] WalletController.Instance is null.");
+                break;
+
+            case BlindBoxRewardType.Modifier:
+                if (modifierConfigDatabase == null)
+                {
+                    Debug.LogWarning("[BlindBoxManager] ModifierConfigDatabase not set.");
+                    return null;
+                }
+                var modData = modifierConfigDatabase.PickByWeight();
+                if (modData == null)
+                {
+                    Debug.LogWarning("[BlindBoxManager] No modifier in config.");
+                    return null;
+                }
+                result.payloadId = modData.id;
+                result.gainedModifier = modData;
+                if (InventoryManager.Instance != null)
+                    InventoryManager.Instance.AddModifierById(modData.id, modData.level);
+                else
+                    Debug.LogWarning("[BlindBoxManager] InventoryManager.Instance is null.");
+                break;
+
+            case BlindBoxRewardType.Skin:
+                if (skinConfigDatabase == null)
+                {
+                    Debug.LogWarning("[BlindBoxManager] SkinConfigDatabase not set.");
+                    return null;
+                }
+                var skinData = skinConfigDatabase.PickByWeight();
+                if (skinData == null)
+                {
+                    Debug.LogWarning("[BlindBoxManager] No skin in config.");
+                    return null;
+                }
+                result.payloadId = skinData.id;
+                result.gainedSkin = skinData;
+                if (InventoryManager.Instance != null)
+                    InventoryManager.Instance.AddSkinById(skinData.id);
+                else
+                    Debug.LogWarning("[BlindBoxManager] InventoryManager.Instance is null.");
+                break;
         }
 
-        return null;
+        return result;
     }
 }
 

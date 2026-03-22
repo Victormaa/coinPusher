@@ -1,4 +1,4 @@
-type,amount,weight,payloadId
-Tokens,5,10,
-Modifier,1,3,mod_speed_lv2
-Skin,1,1,skin_gold
+type,weight
+Tokens,10
+Modifier,3
+Skin,1

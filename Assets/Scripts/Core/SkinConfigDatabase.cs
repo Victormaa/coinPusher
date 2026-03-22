@@ -11,6 +11,7 @@ public class SkinConfigDatabase : MonoBehaviour
     public string skinsCsvPath = "Config/Skins.csv";
 
     private List<SkinData> _skins = new List<SkinData>();
+    private List<float> _weights = new List<float>();
 
     private void Awake()
     {
@@ -20,6 +21,7 @@ public class SkinConfigDatabase : MonoBehaviour
     private void LoadFromCsv()
     {
         _skins.Clear();
+        _weights.Clear();
         string raw = CsvLoader.LoadFromStreamingAssets(skinsCsvPath);
         if (string.IsNullOrEmpty(raw))
             return;
@@ -31,11 +33,13 @@ public class SkinConfigDatabase : MonoBehaviour
             if (string.IsNullOrEmpty(id))
                 continue;
 
+            float weight = CsvLoader.GetFloat(row, "weight", 1f);
             _skins.Add(new SkinData
             {
                 id = id,
                 displayName = CsvLoader.GetString(row, "displayName")
             });
+            _weights.Add(weight <= 0f ? 1f : weight);
         }
     }
 
@@ -51,6 +55,38 @@ public class SkinConfigDatabase : MonoBehaviour
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// 按权重随机抽取一个皮肤配置。
+    /// </summary>
+    public SkinData PickByWeight()
+    {
+        if (_skins == null || _skins.Count == 0)
+            return null;
+
+        float total = 0f;
+        for (int i = 0; i < _skins.Count; i++)
+        {
+            float w = i < _weights.Count ? _weights[i] : 1f;
+            if (w <= 0f) continue;
+            total += w;
+        }
+
+        if (total <= 0f)
+            return _skins[0];
+
+        float rand = Random.Range(0f, total);
+        float acc = 0f;
+        for (int i = 0; i < _skins.Count; i++)
+        {
+            float w = i < _weights.Count ? _weights[i] : 1f;
+            if (w <= 0f) continue;
+            acc += w;
+            if (rand <= acc)
+                return _skins[i];
+        }
+        return _skins[_skins.Count - 1];
     }
 }
 

@@ -11,6 +11,7 @@ public class ModifierConfigDatabase : MonoBehaviour
     public string modifiersCsvPath = "Config/Modifiers.csv";
 
     private List<SlotModifierData> _modifiers = new List<SlotModifierData>();
+    private List<float> _weights = new List<float>();
 
     private void Awake()
     {
@@ -20,6 +21,7 @@ public class ModifierConfigDatabase : MonoBehaviour
     private void LoadFromCsv()
     {
         _modifiers.Clear();
+        _weights.Clear();
         string raw = CsvLoader.LoadFromStreamingAssets(modifiersCsvPath);
         if (string.IsNullOrEmpty(raw))
             return;
@@ -39,7 +41,9 @@ public class ModifierConfigDatabase : MonoBehaviour
                 pusherSpeedMultiplier = CsvLoader.GetFloat(row, "pusherSpeedMultiplier", 1f),
                 dropTiltOffset = CsvLoader.GetFloat(row, "dropTiltOffset")
             };
+            float weight = CsvLoader.GetFloat(row, "weight", 1f);
             _modifiers.Add(data);
+            _weights.Add(weight <= 0f ? 1f : weight);
         }
     }
 
@@ -70,6 +74,38 @@ public class ModifierConfigDatabase : MonoBehaviour
         }
 
         return fallback;
+    }
+
+    /// <summary>
+    /// 按权重随机抽取一个装备配置。
+    /// </summary>
+    public SlotModifierData PickByWeight()
+    {
+        if (_modifiers == null || _modifiers.Count == 0)
+            return null;
+
+        float total = 0f;
+        for (int i = 0; i < _modifiers.Count; i++)
+        {
+            float w = i < _weights.Count ? _weights[i] : 1f;
+            if (w <= 0f) continue;
+            total += w;
+        }
+
+        if (total <= 0f)
+            return _modifiers[0];
+
+        float rand = Random.Range(0f, total);
+        float acc = 0f;
+        for (int i = 0; i < _modifiers.Count; i++)
+        {
+            float w = i < _weights.Count ? _weights[i] : 1f;
+            if (w <= 0f) continue;
+            acc += w;
+            if (rand <= acc)
+                return _modifiers[i];
+        }
+        return _modifiers[_modifiers.Count - 1];
     }
 }
 
