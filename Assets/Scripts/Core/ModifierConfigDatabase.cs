@@ -3,12 +3,45 @@ using UnityEngine;
 
 /// <summary>
 /// 推币机装备（SlotModifier）的静态配置表。
-/// 通过 ID + 等级返回对应的数值配置。
+/// 从 StreamingAssets/Config/Modifiers.csv 加载，Excel 另存为 CSV 后放入即可。
 /// </summary>
 public class ModifierConfigDatabase : MonoBehaviour
 {
-    [Tooltip("所有可掉落/可获得的装备配置列表。")]
-    public List<SlotModifierData> modifiers = new List<SlotModifierData>();
+    [Tooltip("CSV 相对 StreamingAssets 的路径")]
+    public string modifiersCsvPath = "Config/Modifiers.csv";
+
+    private List<SlotModifierData> _modifiers = new List<SlotModifierData>();
+
+    private void Awake()
+    {
+        LoadFromCsv();
+    }
+
+    private void LoadFromCsv()
+    {
+        _modifiers.Clear();
+        string raw = CsvLoader.LoadFromStreamingAssets(modifiersCsvPath);
+        if (string.IsNullOrEmpty(raw))
+            return;
+
+        var rows = CsvLoader.ParseCsv(raw);
+        foreach (var row in rows)
+        {
+            string id = CsvLoader.GetString(row, "id");
+            if (string.IsNullOrEmpty(id))
+                continue;
+
+            var data = new SlotModifierData
+            {
+                id = id,
+                level = CsvLoader.GetInt(row, "level", 1),
+                sideTiltOffset = CsvLoader.GetFloat(row, "sideTiltOffset"),
+                pusherSpeedMultiplier = CsvLoader.GetFloat(row, "pusherSpeedMultiplier", 1f),
+                dropTiltOffset = CsvLoader.GetFloat(row, "dropTiltOffset")
+            };
+            _modifiers.Add(data);
+        }
+    }
 
     /// <summary>
     /// 根据 ID 和等级查找装备配置。
@@ -16,11 +49,11 @@ public class ModifierConfigDatabase : MonoBehaviour
     /// </summary>
     public SlotModifierData GetById(string id, int level = -1)
     {
-        if (string.IsNullOrEmpty(id) || modifiers == null || modifiers.Count == 0)
+        if (string.IsNullOrEmpty(id) || _modifiers == null || _modifiers.Count == 0)
             return null;
 
         SlotModifierData fallback = null;
-        foreach (var m in modifiers)
+        foreach (var m in _modifiers)
         {
             if (m == null || m.id != id) continue;
 

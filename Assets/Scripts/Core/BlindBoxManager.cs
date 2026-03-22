@@ -9,10 +9,10 @@ public class BlindBoxManager : MonoBehaviour
 {
     public static BlindBoxManager Instance { get; private set; }
 
-    [Header("盲盒奖励权重表")]
-    [Tooltip("配置盲盒可能产出的所有奖励及其权重。")]
-    public List<BlindBoxRewardEntry> rewards = new List<BlindBoxRewardEntry>();
+    [Tooltip("CSV 相对 StreamingAssets 的路径")]
+    public string rewardsCsvPath = "Config/BlindBoxRewards.csv";
 
+    private List<BlindBoxRewardEntry> _rewards = new List<BlindBoxRewardEntry>();
     private int _pendingCount;
 
     /// <summary>
@@ -29,6 +29,37 @@ public class BlindBoxManager : MonoBehaviour
         }
 
         Instance = this;
+        LoadRewardsFromCsv();
+    }
+
+    private void LoadRewardsFromCsv()
+    {
+        _rewards.Clear();
+        string raw = CsvLoader.LoadFromStreamingAssets(rewardsCsvPath);
+        if (string.IsNullOrEmpty(raw))
+            return;
+
+        var rows = CsvLoader.ParseCsv(raw);
+        foreach (var row in rows)
+        {
+            string typeStr = CsvLoader.GetString(row, "type");
+            if (string.IsNullOrEmpty(typeStr))
+                continue;
+
+            if (!System.Enum.TryParse(typeStr, true, out BlindBoxRewardType type))
+            {
+                Debug.LogWarning($"[BlindBoxManager] Unknown reward type: {typeStr}");
+                continue;
+            }
+
+            _rewards.Add(new BlindBoxRewardEntry
+            {
+                type = type,
+                amount = CsvLoader.GetInt(row, "amount", 1),
+                weight = CsvLoader.GetFloat(row, "weight", 1f),
+                payloadId = CsvLoader.GetString(row, "payloadId")
+            });
+        }
     }
 
     /// <summary>
@@ -113,13 +144,13 @@ public class BlindBoxManager : MonoBehaviour
     /// </summary>
     private BlindBoxRewardEntry PickReward()
     {
-        if (rewards == null || rewards.Count == 0)
+        if (_rewards == null || _rewards.Count == 0)
         {
             return null;
         }
 
         float totalWeight = 0f;
-        foreach (var r in rewards)
+        foreach (var r in _rewards)
         {
             if (r == null || r.weight <= 0f) continue;
             totalWeight += r.weight;
@@ -133,7 +164,7 @@ public class BlindBoxManager : MonoBehaviour
         float rand = Random.Range(0f, totalWeight);
         float acc = 0f;
 
-        foreach (var r in rewards)
+        foreach (var r in _rewards)
         {
             if (r == null || r.weight <= 0f) continue;
 
@@ -145,10 +176,10 @@ public class BlindBoxManager : MonoBehaviour
         }
 
         // 理论上不会走到这里，保险起见返回最后一个非空条目
-        for (int i = rewards.Count - 1; i >= 0; i--)
+        for (int i = _rewards.Count - 1; i >= 0; i--)
         {
-            if (rewards[i] != null)
-                return rewards[i];
+            if (_rewards[i] != null)
+                return _rewards[i];
         }
 
         return null;

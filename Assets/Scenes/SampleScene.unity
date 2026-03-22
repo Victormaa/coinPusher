@@ -4627,11 +4627,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 941a3ed0e57b7424aa02512bb2767e25, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rewards:
-  - type: 0
-    amount: 1
-    weight: 1
-    payloadId: 1001_skin_gold
+  rewardsCsvPath: Config/BlindBoxRewards.csv
 --- !u!1 &1366692346
 GameObject:
   m_ObjectHideFlags: 0
@@ -4975,22 +4971,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97fb445378d7d8349a09993b7c141f5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  modifiers:
-  - id: mod_pusher_speed_lv1
-    level: 1
-    sideTiltOffset: 0
-    pusherSpeedMultiplier: 1.1
-    dropTiltOffset: 0
-  - id: mod_pusher_speed_lv2
-    level: 2
-    sideTiltOffset: 0
-    pusherSpeedMultiplier: 1.2
-    dropTiltOffset: 0
-  - id: mod_pusher_speed_lv3
-    level: 3
-    sideTiltOffset: 0
-    pusherSpeedMultiplier: 2
-    dropTiltOffset: 0
+  modifiersCsvPath: Config/Modifiers.csv
 --- !u!114 &1488394534 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9200401105947459121, guid: 91cde68d2608a0141810ba65693056de, type: 3}
@@ -6735,9 +6716,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e62ee9af97e939d40963cc395b2cde5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skins:
-  - id: 1001_skin_gold
-    displayName: All Gold Built Pusher
+  skinsCsvPath: Config/Skins.csv
 --- !u!1 &2112774929
 GameObject:
   m_ObjectHideFlags: 0
